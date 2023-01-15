@@ -1,47 +1,82 @@
 #include "lib/include.h"
-volatile float valor,valor1;
-volatile uint16_t Result[2];
-volatile uint16_t duty;
-volatile uint16_t duty2;
-volatile uint16_t duty3;
-uint16_t count;
-int main(void)
-{
-    //Experimento 1
-/*Usando el modulo 0 de PWM con una frecuencia de reloj del sistema de 50,000,000 Hz
- * junto con el generador 1  habilitar alguno de los pwm's asociados y obtener un PWM
- * cuya frecuencia sea de 10KHz
- */
-//Experimento 2
-/*Usando el modulo 0 de PWM con una frecuencia de reloj del sistema de 20,000,000 Hz
- * junto con el generador 0,1,2  habilitar alguno de los pwm's asociados y obtener un PWM
- * cuya frecuencia sea de 50Hz con tres potenciometros variar el ciclo de trabajo
- * para controlar la posicion de tres servos sg90 o otros.
- *
- */
-//Experimento 3
-/*Usando el modulo 0 de PWM con una frecuencia de reloj del sistema de 20,000,000 Hz
- * junto con el generador 0,1,2  habilitar alguno de los pwm's asociados y obtener un PWM
- * cuya frecuencia sea de 50Hz , utilizando el uart de la practica 3
- * se enviara dato desde interfaz de simulink para controlar la intensidad luminosa 
- * usando un led RGB externa 
- *
- */
-    Configurar_PLL(_20MHZ);  //Confiuracion de velocidad de reloj
-    Configurar_UART0();//Yo FCLK 20MHZ Baudrate 9600
-    Configura_Reg_ADC0();
-    Configura_Reg_PWM1(8);
-    
-    //Experimento 0
-    count = 0;
-    duty=15999;
-    duty2=15999;
-    duty3=15999;
 
-    while (1)
-    {
+int main(void) {
+
+    volatile uint16_t vdig[6];
+
+    int k=0;
+    Configurar_SysTick();
+    Configurar_PLL();  //Confiuracion de velocidad de reloj
+    Configura_Reg_ADC0();
+    Configurar_UART1();
+     config_interrupt();
+  
+    char num[4];
+    //printString("3");
+    while(1) {
+
+         ADC0->PSSI |= (1<<2)| (1<<1);  
+             /* Enable SS3 conversion or start sampling data from AN0 */
+         while((ADC0->RIS & (1<<2)) == 0){} ;   /* Wait untill sample conversion completed*/
+         vdig[0]= ADC0->SSFIFO2& 0xFFF;
+         
+          /* Wait untill sample conversion completed*/
+         
+         vdig[1]= ADC0->SSFIFO2 &0xFFF;
+         
+         vdig[2]= ADC0->SSFIFO2&0xFFF;
+         
+         utoa(vdig[0],num,10);
+         transmisor(num);
         
+         utoa(vdig[1],num,10);
+         transmisor(num);
+         utoa(vdig[2],num,10);
+         transmisor(num);
+                                      /* Enable SS3 conversion or start sampling data from AN0 */
+           /* Wait untill sample conversion completed*/
+         
+         while((ADC0->RIS & (1<<1)) == 0){} ; 
+           /* Wait untill sample conversion completed*/
+         vdig[3]= ADC0->SSFIFO1& 0xFFF0;
+         
+         
+         
+         
+         
+          
+                                    /* Enable SS3 conversion or start sampling data from AN0 */
+            /* Wait untill sample conversion completed*/
+         vdig[4]= ADC0->SSFIFO1& 0xFF0F;
+            /* Wait untill sample conversion completed*/
+         
+         vdig[5]= ADC0->SSFIFO1& 0xFFFF;
+        
+        utoa(vdig[3],num,10);
+         transmisor(num);
+         utoa(vdig[4],num,10);
+         transmisor(num);
+        
+         utoa(vdig[5],num,10);
+         transmisor(num); 
+          ADC0->ISC = (1<<2)|(1<<1);
+
+          /* read adc coversion result from SS3 FIFO*/
+        ADC0->ISC = 8;          /* clear coversion clear flag bit*/
+			/*control Green PF3->LED */
+		
     }
-    
+
 }
 
+void GPIOJ_Handler(void) {
+  if (GPIOJ_AHB->RIS & 0x01){
+
+  }
+}
+
+void IntDefaultHandler(void){
+  if (GPIOJ_AHB->RIS & 0x01){
+
+  }
+}
